@@ -1,0 +1,135 @@
+name: build
+
+# Tests on every push; Linux, Windows and macOS packages on every push; a GitHub release with
+# the packages for tags v*. Tags with a dash (v0.2.0-beta.1) become pre-releases.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  APP: qro-easy-controller-hamlib
+  QT_VERSION: '6.11.3' # 6.9+ sends the window icon to KWin on Wayland
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test in the Debian toolchain image
+        run: |
+          scripts/dev.sh build
+          scripts/dev.sh test
+
+  linux:
+    runs-on: ubuntu-22.04 # oldest supported glibc for the AppImage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+      - name: Libraries for Qt's CMake files and the xcb platform plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-0 libxcb-cursor0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libfuse2
+      - name: Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+          cmake --build build --parallel
+          DESTDIR="$PWD/AppDir" cmake --install build
+      - name: AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        run: |
+          export QMAKE="$QT_ROOT_DIR/bin/qmake"
+          base=https://github.com/linuxdeploy
+          wget -q $base/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q $base/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+          export LDAI_OUTPUT="$APP-linux-x86_64.AppImage" OUTPUT="$APP-linux-x86_64.AppImage"
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+          ls -la "$APP-linux-x86_64.AppImage"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: ${{ env.APP }}-linux-x86_64.AppImage
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          cache: true
+      - name: Build
+        run: |
+          cmake -S . -B build
+          cmake --build build --config Release --parallel
+      - name: Package
+        shell: pwsh
+        run: |
+          $dir = "$env:APP-windows-x64"
+          New-Item -ItemType Directory $dir | Out-Null
+          Copy-Item "build/Release/$env:APP.exe" $dir
+          windeployqt --release --no-translations --no-system-d3d-compiler --no-opengl-sw "$dir/$env:APP.exe"
+          # The Visual C++ runtime next to the program, so no separate installer is needed.
+          foreach ($dll in 'msvcp140.dll', 'msvcp140_1.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
+            Copy-Item "$env:WINDIR/System32/$dll" $dir
+          }
+          Copy-Item README.md, LICENSE $dir
+          Compress-Archive -Path $dir -DestinationPath "$dir.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: ${{ env.APP }}-windows-x64.zip
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+      - name: Build (Apple silicon and Intel)
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
+          cmake --build build --parallel
+      - name: Package
+        run: |
+          app="build/Easy Controller Hamlib.app"
+          macdeployqt "$app"
+          codesign --force --deep --sign - "$app" # ad-hoc: Apple silicon runs nothing unsigned
+          mkdir dmg
+          cp -R "$app" dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "Easy Controller Hamlib" -srcfolder dmg -ov -format UDZO "$APP-macos.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: ${{ env.APP }}-macos.dmg
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, linux, windows, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Easy Controller Hamlib
+GenericName=Band decoder
+Comment=Switch the QRO.cz Easy Controller 6-2 antennas by the radio's band (Hamlib rigctld)
+Exec=qro-easy-controller-hamlib
+Icon=qro-easy-controller-hamlib
+Terminal=false
+Categories=Network;HamRadio;
+Keywords=hamlib;rigctld;antenna;switch;band decoder;qro;easy controller;so2r;

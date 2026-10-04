@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Easy Controller Hamlib: two radios, each routed to the antenna for its band. -->
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6390"/><stop offset="1" stop-color="#0c2539"/></linearGradient></defs>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bg)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7">
+    <path d="M18 18 L30 34 L42 18 M30 34 V46" stroke="#8fb3cc" stroke-opacity="0.45"/>
+    <path d="M52 18 L64 34 L76 18 M64 34 V46" stroke="#ffb02e"/>
+    <path d="M86 18 L98 34 L110 18 M98 34 V46" stroke="#45d0ea"/>
+    <path d="M64 34 V48 C64 66 40 64 40 84" stroke="#ffb02e"/>
+    <path d="M98 34 V48 C98 66 88 64 88 84" stroke="#45d0ea"/>
+  </g>
+  <rect x="21" y="84" width="38" height="26" rx="7" fill="#ffb02e"/>
+  <rect x="69" y="84" width="38" height="26" rx="7" fill="#45d0ea"/>
+  <g fill="#0c2539" fill-opacity="0.6">
+    <rect x="27" y="91" width="16" height="6" rx="2"/><circle cx="50" cy="97" r="5"/>
+    <rect x="75" y="91" width="16" height="6" rx="2"/><circle cx="98" cy="97" r="5"/>
+  </g>
+</svg>

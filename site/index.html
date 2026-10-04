@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Easy Controller Hamlib · Hamlib band decoder for the QRO.cz Easy Controller 6-2</title>
+<meta name="description" content="Free desktop app for Linux, Windows and macOS that switches the antennas of a QRO.cz Easy Controller 6-2 (6-to-2 antenna switch) by the band of your radio, read from Hamlib rigctld. Band decoder for SO2R and two-radio stations.">
+<meta name="keywords" content="QRO.cz, Easy Controller, Easy Controller 6-2, 6-to-2 antenna switch, Hamlib, rigctld, band decoder, antenna switch, SO2R, ham radio, amateur radio, QLog, WSJT-X">
+<meta property="og:title" content="Easy Controller Hamlib">
+<meta property="og:description" content="Hamlib band decoder for the QRO.cz Easy Controller 6-2: your radio changes band, the antennas follow.">
+<meta property="og:image" content="https://oh2gba.github.io/qro-easy-controller-hamlib/img/main.png">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="img/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/icon-256.png">
+<style>
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --text: #15212b;
+  --muted: #5b6b78;
+  --line: #dbe3ea;
+  --navy: #0c2539;
+  --blue: #1f6390;
+  --amber: #ffb02e;
+  --cyan: #45d0ea;
+  --accent: #1f6390;
+  --accent-text: #ffffff;
+  --code-bg: #eef2f6;
+  --shadow: 0 1px 2px rgba(12, 37, 57, .06), 0 8px 24px rgba(12, 37, 57, .08);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1620;
+    --surface: #112230;
+    --text: #e4ecf2;
+    --muted: #9db0bf;
+    --line: #22384a;
+    --accent: #45d0ea;
+    --accent-text: #0b1620;
+    --code-bg: #0f1d29;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1620; --surface: #112230; --text: #e4ecf2; --muted: #9db0bf; --line: #22384a;
+  --accent: #45d0ea; --accent-text: #0b1620; --code-bg: #0f1d29;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Ubuntu, sans-serif;
+}
+a { color: var(--accent); }
+img { max-width: 100%; height: auto; display: block; }
+code { font-family: ui-monospace, "SFMono-Regular", "DejaVu Sans Mono", Consolas, monospace; font-size: .9em;
+  background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+header.hero {
+  background: linear-gradient(180deg, #1f6390 0%, #0c2539 100%);
+  color: #fff;
+  padding: 56px 0 64px;
+}
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; align-items: center; }
+@media (min-width: 900px) { .hero .wrap { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+.brand { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.brand img { width: 64px; height: 64px; border-radius: 15px; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
+.brand span { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #bcd6e8; }
+h1 { font-size: clamp(32px, 5vw, 46px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.01em; }
+.tagline { font-size: clamp(18px, 2.4vw, 21px); color: #d4e6f3; margin: 0 0 24px; }
+.tagline strong { color: #fff; }
+
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 0 0 14px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 12px;
+  font-size: 18px; font-weight: 700; text-decoration: none; line-height: 1.2;
+  background: var(--amber); color: #1b1300; box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  transition: transform .15s, background .15s;
+}
+.btn:hover { background: #ffbf55; transform: translateY(-1px); }
+.btn svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.cta .other { color: #d4e6f3; font-size: 15px; }
+.cta .other a { color: #fff; }
+.release-line { font-size: 14px; color: #bcd6e8; margin: 0; }
+.release-line a { color: #fff; }
+
+.get-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 18px; }
+.get {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+  box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px;
+}
+.get.mine { border: 2px solid var(--amber); }
+.get h3 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+.get h3 .badge { font-size: 12px; font-weight: 600; background: var(--amber); color: #1b1300; border-radius: 999px; padding: 2px 9px; }
+.get .req { margin: -6px 0 0; color: var(--muted); font-size: 15px; }
+.get .btn { justify-content: center; box-shadow: none; background: var(--accent); color: var(--accent-text); font-size: 17px; }
+.get .btn:hover { filter: brightness(1.08); background: var(--accent); }
+.get.mine .btn { background: var(--amber); color: #1b1300; }
+.get .file { margin: 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.get .tip { margin: 0; font-size: 15px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+.window {
+  background: #ececec; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,.45);
+}
+.window .bar { height: 30px; background: #dcdcdc; display: flex; align-items: center; gap: 7px; padding: 0 12px; }
+.window .bar i { width: 11px; height: 11px; border-radius: 50%; background: #c4c4c4; display: block; }
+.window .bar span { margin-left: 8px; font-size: 13px; color: #555; }
+
+main section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+main section:last-child { border-bottom: 0; }
+h2 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
+.lead { color: var(--muted); margin: 0 0 32px; max-width: 720px; }
+
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+.flow .node {
+  flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; box-shadow: var(--shadow);
+}
+.flow .node b { display: block; }
+.flow .node small { color: var(--muted); }
+.flow .node.app { border-color: var(--accent); }
+.flow .arrow { align-self: center; color: var(--muted); font-size: 20px; flex: 0 0 auto; }
+@media (max-width: 700px) {
+  .flow { flex-direction: column; }
+  .flow .node { flex: 0 0 auto; }
+  .flow .arrow { transform: rotate(90deg); }
+}
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+.dot.a { background: var(--amber); } .dot.b { background: var(--cyan); } .dot.n { background: var(--blue); }
+
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.steps li { counter-increment: step; position: relative; padding: 4px 0 0 48px; min-height: 36px; }
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-text); font-weight: 700; display: grid; place-items: center;
+}
+.steps p { margin: 2px 0 0; color: var(--muted); }
+
+.shots { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 900px) { .shots { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
+figure { margin: 0; }
+figure .frame { border-radius: 10px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+code { overflow-wrap: anywhere; }
+.note {
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--amber);
+  border-radius: 8px; padding: 16px 18px; margin-top: 24px;
+}
+.note p { margin: 0; }
+.note p + p { margin-top: 8px; }
+
+footer { padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="brand">
+        <img src="img/icon.svg" alt="" width="64" height="64">
+        <span>For the QRO.cz Easy Controller 6-2</span>
+      </div>
+      <h1>Easy Controller Hamlib</h1>
+      <p class="tagline">Your radio changes band, the antennas follow. A <strong>Hamlib band decoder</strong> for the
+        <strong>QRO.cz Easy Controller 6-2</strong> and its 6-to-2 antenna switch.</p>
+      <div class="cta">
+        <a class="btn" id="hero-download" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 10l6 6 6-6M4 20h16"/></svg>
+          <span>Download</span></a>
+        <span class="other">Free for Windows, macOS and Linux · <a href="#download">all downloads</a></span>
+      </div>
+      <p class="release-line"><span class="version">Open source, GPL-3.0.</span>
+        <a href="https://github.com/oh2gba/qro-easy-controller-hamlib">Source on GitHub</a></p>
+    </div>
+    <div class="window" aria-hidden="true">
+      <div class="bar"><i></i><i></i><i></i><span>Easy Controller Hamlib</span></div>
+      <img src="img/main.png" width="1080" height="262" alt="Main window: radio on 20 m, TRX A on the Yagi, TRX B on the dipole, as in the table">
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="download">
+    <div class="wrap">
+      <h2>Download</h2>
+      <p class="lead">Pick your system. Nothing to install besides the app; it needs Hamlib's <code>rigctld</code>
+        for your radio, which your logger usually runs already.</p>
+      <div class="get-grid">
+        <div class="get" data-os="windows">
+          <h3>Windows</h3>
+          <p class="req">Windows 10 and 11, 64-bit</p>
+          <a class="btn" data-asset="windows-x64.zip" href="https://github.com/oh2gba/qro-easy-controller-hamlib/releases/latest">Download for Windows</a>
+          <p class="file">qro-easy-controller-hamlib-windows-x64.zip <span class="size"></span></p>
+          <p class="tip">Unzip, then run <code>qro-easy-controller-hamlib.exe</code>. If Windows SmartScreen appears:
+            <i>More info</i> → <i>Run anyway</i>.</p>
+        </div>
+        <div class="get" data-os="mac">
+          <h3>macOS</h3>
+          <p class="req">macOS 13 or later, Apple silicon and Intel</p>
+          <a class="btn" data-asset="macos.dmg" href="https://github.com/oh2gba/qro-easy-controller-hamlib/releases/latest">Download for macOS</a>
+          <p class="file">qro-easy-controller-hamlib-macos.dmg <span class="size"></span></p>
+          <p class="tip">Open the disk image and drag the app to Applications. The first time:
+            <i>System Settings</i> → <i>Privacy &amp; Security</i> → <i>Open Anyway</i>, and allow local network access.</p>
+        </div>
+        <div class="get" data-os="linux">
+          <h3>Linux</h3>
+          <p class="req">64-bit PC, any recent distribution</p>
+          <a class="btn" data-asset="linux-x86_64.AppImage" href="https://github.com/oh2gba/qro-easy-controller-hamlib/releases/latest">Download for Linux</a>
+          <p class="file">qro-easy-controller-hamlib-linux-x86_64.AppImage <span class="size"></span></p>
+          <p class="tip">Make it executable and run it:<br><code>chmod +x qro-easy-controller-hamlib-linux-x86_64.AppImage</code>.
+            It adds itself to the application menu.</p>
+        </div>
+      </div>
+      <div class="note">
+        <p><b>Not signed with a paid certificate</b>, so Windows and macOS ask once before the first start.
+          <span class="version-inline"></span> Older versions: <a href="https://github.com/oh2gba/qro-easy-controller-hamlib/releases">all releases</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="lead">It reads the band from Hamlib's <code>rigctld</code>, the same one QLog, WSJT-X and other
+        programs already use, and tells the Easy Controller over your network which antenna each radio gets.</p>
+      <div class="flow">
+        <div class="node"><b>Your radio</b><small>any rig Hamlib supports</small></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>rigctld</b><small>shared with your logger</small></div>
+        <div class="arrow">→</div>
+        <div class="node app"><b>Easy Controller Hamlib</b><small>band → antenna table</small></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>Easy Controller 6-2</b><small>over WiFi</small></div>
+        <div class="arrow">→</div>
+        <div class="node"><b>6-to-2 switch</b><small>both radios on their antennas</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What it does</h2>
+      <p class="lead">A small window that runs next to your logger.</p>
+      <div class="features">
+        <div class="card"><h3><span class="dot a"></span>Follows the band</h3>
+          <p>When the radio changes band, both radios go to the antennas in your table: an antenna, off, or unchanged, per band.</p></div>
+        <div class="card"><h3><span class="dot b"></span>Switches only on receive</h3>
+          <p>While a radio transmits, the change waits. No hot switching.</p></div>
+        <div class="card"><h3><span class="dot n"></span>Works with first-win</h3>
+          <p>Commands go out in an order where neither radio asks for the antenna the other one holds.</p></div>
+        <div class="card"><h3><span class="dot a"></span>Finds the controller</h3>
+          <p>One click searches your network. If the controller gets a new address, it finds it again by itself.</p></div>
+        <div class="card"><h3><span class="dot b"></span>Shows the state</h3>
+          <p>Green when the antennas are as in the table, yellow when someone switched by hand, red when something is missing.</p></div>
+        <div class="card"><h3><span class="dot n"></span>Keeps trying</h3>
+          <p>Radio off, rigctld restarted, controller rebooting: it waits and switches when everything is back.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Getting started</h2>
+      <p class="lead">Five minutes, once.</p>
+      <ol class="steps">
+        <li><b>Put the Easy Controller on your network.</b>
+          <p>Enable its WiFi and join it to your access point, as in the
+            <a href="https://hamparts.shop/blog/6-2-easy-controller-manual.html">6-2 Easy Controller manual</a>.</p></li>
+        <li><b>Have rigctld running for your radio.</b>
+          <p>If your logger already starts it, nothing to do. Otherwise for example <code>rigctld -m &lt;model&gt; -r &lt;port&gt;</code>.</p></li>
+        <li><b>Start Easy Controller Hamlib.</b>
+          <p>The settings open on the first start. The radio is <code>localhost</code>, port <code>4532</code>.</p></li>
+        <li><b>Press Search network.</b>
+          <p>The controller's address fills in when it answers.</p></li>
+        <li><b>Name your antennas and fill in the band table.</b>
+          <p>Change band on the radio and watch both radios move.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Screenshots</h2>
+      <p class="lead">The settings, and the log of a band change.</p>
+      <div class="shots">
+        <figure><div class="frame"><img src="img/settings.png" width="1464" height="844" alt="Settings: rigctld, the controller with network search, antenna names, and the antennas per band for Radio 1 and Radio 2"></div>
+          <figcaption>Settings: the radio, the controller, antenna names and the antennas per band.</figcaption></figure>
+        <figure><div class="frame"><img src="img/log.png" width="1080" height="594" alt="Main window with the log open"></div>
+          <figcaption>The log shows every band change and every command sent.</figcaption></figure>
+      </div>
+      <div class="note">
+        <p>In use at OH2GBA with a real Easy Controller 6-2. The controller has no published interface; the app speaks
+          the protocol of its web page. Reports and ideas are welcome in the
+          <a href="https://github.com/oh2gba/qro-easy-controller-hamlib/issues">issues</a>.</p>
+        <p>Not affiliated with QRO.cz. The controller's own interlocks stay in force whatever this app sends.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Easy Controller Hamlib · by OH2GBA · GPL-3.0</span>
+    <span><a href="https://github.com/oh2gba/qro-easy-controller-hamlib">GitHub</a> ·
+      <a href="https://github.com/oh2gba/qro-easy-controller-hamlib#readme">Documentation</a> ·
+      <a href="https://github.com/oh2gba/qro-easy-controller-hamlib/blob/main/LICENSE">Licence</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var repo = "oh2gba/qro-easy-controller-hamlib";
+  var names = { windows: "Windows", mac: "macOS", linux: "Linux" };
+  var ua = navigator.userAgent;
+  var os = /Windows/.test(ua) ? "windows" : /Mac OS X|Macintosh/.test(ua) ? "mac"
+         : /Android|iPhone|iPad/.test(ua) ? "" : /Linux|X11/.test(ua) ? "linux" : "";
+  var cards = document.querySelectorAll(".get");
+  var hero = document.getElementById("hero-download");
+
+  // Your system first, marked, and the big button goes straight to its file.
+  if (os) {
+    cards.forEach(function (c) {
+      if (c.dataset.os !== os) return;
+      c.classList.add("mine");
+      c.querySelector("h3").insertAdjacentHTML("beforeend", '<span class="badge">your system</span>');
+      c.parentNode.insertBefore(c, c.parentNode.firstChild);
+      hero.querySelector("span").textContent = "Download for " + names[os];
+      hero.href = c.querySelector(".btn").href;
+    });
+  }
+
+  // The newest release; without it the buttons keep pointing at the releases page.
+  fetch("https://api.github.com/repos/" + repo + "/releases?per_page=5")
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (releases) {
+      var rel = releases.filter(function (r) { return !r.draft; })[0];
+      if (!rel) return;
+      cards.forEach(function (c) {
+        var btn = c.querySelector(".btn");
+        var asset = rel.assets.filter(function (a) { return a.name.endsWith(btn.dataset.asset); })[0];
+        if (!asset) return;
+        btn.href = asset.browser_download_url;
+        c.querySelector(".size").textContent = "· " + (asset.size / 1048576).toFixed(0) + " MB";
+        if (c.classList.contains("mine")) hero.href = asset.browser_download_url;
+      });
+      var v = rel.tag_name.replace(/^v/, "");
+      document.querySelectorAll(".version").forEach(function (e) {
+        e.textContent = "Version " + v + ", open source, GPL-3.0.";
+      });
+      document.querySelectorAll(".version-inline").forEach(function (e) {
+        e.textContent = "This is version " + v + (rel.prerelease ? " (pre-release)" : "") + ".";
+      });
+    })
+    .catch(function () {});
+})();
+</script>
+</body>
+</html>
