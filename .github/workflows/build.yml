@@ -65,7 +65,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: jurplel/install-qt-action@v4
         with:
-          version: ${{ env.QT_VERSION }}
+          # aqtinstall 3.3 cannot read the split Windows repository of Qt 6.11 yet; 6.10 is enough here
+          # (the 6.9+ window icon matters on Linux only).
+          version: '6.10.3'
           arch: win64_msvc2022_64
           cache: true
       - name: Build
