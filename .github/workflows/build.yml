@@ -18,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and test in the Debian toolchain image
         run: |
           scripts/dev.sh build
@@ -27,7 +27,7 @@ jobs:
   linux:
     runs-on: ubuntu-22.04 # oldest supported glibc for the AppImage
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
@@ -54,7 +54,7 @@ jobs:
           export LDAI_OUTPUT="$APP-linux-x86_64.AppImage" OUTPUT="$APP-linux-x86_64.AppImage"
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
           ls -la "$APP-linux-x86_64.AppImage"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux
           path: ${{ env.APP }}-linux-x86_64.AppImage
@@ -62,7 +62,7 @@ jobs:
   windows:
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: jurplel/install-qt-action@v4
         with:
           # aqtinstall 3.3 cannot read the split Windows repository of Qt 6.11 yet; 6.10 is enough here
@@ -87,7 +87,7 @@ jobs:
           }
           Copy-Item README.md, LICENSE $dir
           Compress-Archive -Path $dir -DestinationPath "$dir.zip"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: ${{ env.APP }}-windows-x64.zip
@@ -95,7 +95,7 @@ jobs:
   macos:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
@@ -114,7 +114,7 @@ jobs:
           cp -R "$app" dmg/
           ln -s /Applications dmg/Applications
           hdiutil create -volname "Easy Controller Hamlib" -srcfolder dmg -ov -format UDZO "$APP-macos.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: ${{ env.APP }}-macos.dmg
@@ -126,11 +126,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: dist/*
           prerelease: ${{ contains(github.ref_name, '-') }}
