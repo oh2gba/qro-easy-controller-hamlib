@@ -24,9 +24,13 @@ private slots:
         QCOMPARE(Bands::forFrequency(1'840'000), QStringLiteral("160m"));
         QCOMPARE(Bands::forFrequency(50'313'000), QStringLiteral("6m"));
         QCOMPARE(Bands::forFrequency(5'357'000), QStringLiteral("60m"));
+        QCOMPARE(Bands::forFrequency(27'185'000), QStringLiteral("11m"));
+        QCOMPARE(Bands::forFrequency(70'200'000), QStringLiteral("4m"));
+        QCOMPARE(Bands::forFrequency(60'000'000), QStringLiteral("4m"));
+        QCOMPARE(Bands::forFrequency(80'000'000), QStringLiteral("4m"));
         QVERIFY(Bands::forFrequency(145'000'000).isEmpty());
         QVERIFY(Bands::forFrequency(9'000'000).isEmpty());
-        QCOMPARE(Bands::names().size(), 11);
+        QCOMPARE(Bands::names().size(), 13);
     }
 
     void encodeDecode()

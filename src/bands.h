@@ -3,7 +3,7 @@
 #include <QString>
 #include <QStringList>
 
-// Amateur bands the 6-to-2 switch covers (DC to 60 MHz), edges wide enough for all three IARU regions.
+// Amateur bands the 6-to-2 switch covers (DC to 80 MHz, including 11m CB and a broad 4m at 60-80 MHz), edges wide enough for all three IARU regions.
 namespace Bands {
 
 QStringList names();
